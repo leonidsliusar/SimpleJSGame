@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catch Game</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+        }
+        canvas {
+            display: block;
+        }
+        #game-container {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            background-color: #87CEEB;
+        }
+        #score {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            font-size: 24px;
+            font-weight: bold;
+            color: #fff;
+            z-index: 10;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <div id="score">Score: 0</div>
+        <canvas id="gameCanvas"></canvas>
+    </div>
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreElement = document.getElementById('score');
+
+        // Set up canvas dimensions
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const basket = {
+            x: canvas.width / 2 - 50,
+            y: canvas.height - 100,
+            width: 100,
+            height: 20,
+            speed: 7,
+            color: 'brown',
+        };
+
+        let objects = [];
+        let score = 0;
+        let gameInterval;
+
+        function createFallingObject() {
+            return {
+                x: Math.random() * (canvas.width - 20),
+                y: -20,
+                width: 20,
+                height: 20,
+                speed: 3 + Math.random() * 2,
+                color: 'red',
+            };
+        }
+
+        function drawBasket() {
+            ctx.fillStyle = basket.color;
+            ctx.fillRect(basket.x, basket.y, basket.width, basket.height);
+        }
+
+        function drawObject(obj) {
+            ctx.fillStyle = obj.color;
+            ctx.fillRect(obj.x, obj.y, obj.width, obj.height);
+        }
+
+        function updateObjects() {
+            objects.forEach(obj => {
+                obj.y += obj.speed;
+
+                if (
+                    obj.y + obj.height >= basket.y &&
+                    obj.x + obj.width >= basket.x &&
+                    obj.x <= basket.x + basket.width
+                ) {
+                    score++;
+                    objects = objects.filter(o => o !== obj);
+                } else if (obj.y > canvas.height) {
+                    objects = objects.filter(o => o !== obj);
+                }
+            });
+        }
+
+        function drawObjects() {
+            objects.forEach(drawObject);
+        }
+
+        function updateGame() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            drawBasket();
+            drawObjects();
+            updateObjects();
+
+            scoreElement.innerText = `Score: ${score}`;
+        }
+
+        function moveBasket(event) {
+            if (event.touches && event.touches.length === 1) {
+                const touchX = event.touches[0].clientX;
+                basket.x = Math.min(
+                    canvas.width - basket.width,
+                    Math.max(0, touchX - basket.width / 2)
+                );
+            }
+        }
+
+        function startGame() {
+            gameInterval = setInterval(() => {
+                if (Math.random() < 0.03) {
+                    objects.push(createFallingObject());
+                }
+                updateGame();
+            }, 16);
+        }
+
+        document.addEventListener('touchmove', moveBasket);
+        startGame();
+    </script>
+</body>
+</html>
